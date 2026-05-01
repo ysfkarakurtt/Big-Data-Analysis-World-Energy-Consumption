@@ -31,10 +31,16 @@ services:
 
   spark:
     image: bitnamilegacy/spark:latest
+    user: root
     environment:
       - SPARK_MODE=master
+      - HOME=/tmp
+      - HADOOP_USER_NAME=root
     ports:
       - "8080:8080"
+    volumes:
+      - ./spark:/app/spark
+      - ./data:/data
 
   python-producer:
     build: ./producer

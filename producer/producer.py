@@ -40,7 +40,7 @@ for index, row in df.iterrows():
     if msg_count % 50 == 0:
         print(f"{msg_count} adet mesaj Kafka'ya başarıyla iletildi.")
     
-    sleep_duration = random.uniform(0.01, 0.1)
+    sleep_duration = random.uniform(0.3, 0.7)
     time.sleep(sleep_duration)
 
 print(f"İşlem tamamlandı. Toplam {msg_count} mesaj Kafka'ya gönderildi.")
