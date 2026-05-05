@@ -6,6 +6,7 @@ spark = SparkSession.builder \
     .appName("WorldEnergyKafkaToDelta") \
     .config("spark.sql.shuffle.partitions", "2") \
     .config("spark.hadoop.hadoop.security.authentication", "simple") \
+    .config("spark.sql.ansi.enabled", "false") \
     .getOrCreate()
 
 outer_schema = StructType([
@@ -20,7 +21,7 @@ raw_df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("subscribe", "project-topic") \
-    .option("startingOffsets", "latest") \
+    .option("startingOffsets", "earliest") \
     .load()
 
 bronze_df = raw_df.selectExpr("CAST(value AS STRING) as raw_message") \
@@ -52,9 +53,9 @@ silver_df = parsed_df.select(
 )
 
 # Null temizleme
-silver_df = silver_df.na.drop(subset=[
-    "country",
-    "year",
+silver_df = silver_df.na.drop(subset=["country", "year"])
+
+silver_df = silver_df.na.fill(value=0.0, subset=[
     "population",
     "gdp",
     "energy_per_capita",
@@ -92,26 +93,26 @@ gold_df = silver_df \
     .withColumn(
         "carbon_risk_score",
         col("carbon_intensity_elec") * col("fossil_ratio")
-    )
+    ).na.fill(0.0)
 
 bronze_query = bronze_df.writeStream \
     .format("delta") \
-    .option("path", "/data/bronze_energy") \
-    .option("checkpointLocation", "/data/checkpoints/bronze") \
+    .option("path", "/data/bronze_v2") \
+    .option("checkpointLocation", "/data/checkpoints_v2/bronze") \
     .outputMode("append") \
     .start()
 
 silver_query = silver_df.writeStream \
     .format("delta") \
-    .option("path", "/data/silver_energy") \
-    .option("checkpointLocation", "/data/checkpoints/silver") \
+    .option("path", "/data/silver_v2") \
+    .option("checkpointLocation", "/data/checkpoints_v2/silver") \
     .outputMode("append") \
     .start()
 
 gold_query = gold_df.writeStream \
     .format("delta") \
-    .option("path", "/data/gold_energy") \
-    .option("checkpointLocation", "/data/checkpoints/gold") \
+    .option("path", "/data/gold_v2") \
+    .option("checkpointLocation", "/data/checkpoints_v2/gold") \
     .outputMode("append") \
     .start()
 

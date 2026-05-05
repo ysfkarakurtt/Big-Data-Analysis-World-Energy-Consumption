@@ -2,3 +2,4 @@ data/
 *.parquet
 */_delta_log/
 data/checkpoints/
+venv/

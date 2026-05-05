@@ -17,7 +17,7 @@ csv_path = '/data/dataset.csv'
 
 try:
     print(f"Veriler okunuyor: {csv_path}")
-    df = pd.read_csv(csv_path)
+    df = pd.read_csv(csv_path).fillna(0)
 except FileNotFoundError:
     print("Data klasöründe dataset.csv bulunamadı! Lütfen dosyayı ekleyin.")
 

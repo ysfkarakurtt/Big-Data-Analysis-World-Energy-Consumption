@@ -30,7 +30,7 @@ services:
       retries: 5
 
   spark:
-    image: bitnamilegacy/spark:latest
+    build: ./spark
     user: root
     environment:
       - SPARK_MODE=master
@@ -41,6 +41,7 @@ services:
     volumes:
       - ./spark:/app/spark
       - ./data:/data
+      - ./ml_pipeline:/app/ml_pipeline
 
   python-producer:
     build: ./producer
