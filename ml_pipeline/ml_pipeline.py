@@ -20,9 +20,8 @@ spark = SparkSession.builder \
     .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
     .getOrCreate()
 
-
 print("\n" + "="*50)
-print("Veriler Delta Lake havuzlarından okunuyor...")
+print("Veriler Delta Lake havuzlarından okunuyor (Batch Processing)...")
 bronze_df = spark.read.format("delta").load("/data/bronze_v2")
 silver_df = spark.read.format("delta").load("/data/silver_v2")
 gold_df = spark.read.format("delta").load("/data/gold_v2")
@@ -31,6 +30,9 @@ print(f"-> Bronze Katmanı: {bronze_df.count()} satır")
 print(f"-> Silver Katmanı: {silver_df.count()} satır")
 print(f"-> Gold Katmanı: {gold_df.count()} satır")
 print("="*50 + "\n")
+
+print("Gold Katmanı Temel İstatistikleri (Özet):")
+gold_df.select("gdp_per_capita", "renewable_ratio", "carbon_intensity_elec").describe().show()
 
 
 print("EDA grafikleri oluşturuluyor ve kaydediliyor...")
@@ -53,10 +55,20 @@ plt.ylabel("Frekans")
 plt.savefig(f"{PLOT_DIR}/eda_dagilim.png")
 plt.close()
 
+plt.figure(figsize=(10, 8))
+korelasyon_kolonlari = ["year", "gdp_per_capita", "renewable_ratio", "fossil_ratio", "energy_efficiency_score", "carbon_intensity_elec"]
+sns.heatmap(pdf[korelasyon_kolonlari].corr(), annot=True, cmap='coolwarm', fmt=".2f", linewidths=0.5)
+plt.title("Değişkenler Arası Korelasyon Haritası")
+plt.tight_layout()
+plt.savefig(f"{PLOT_DIR}/eda_korelasyon.png")
+plt.close()
+
+print("Veri Makine Öğrenmesi için hazırlanıyor...")
 feature_cols = ["year", "gdp_per_capita", "renewable_ratio", "fossil_ratio", "energy_efficiency_score"]
 
 assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
-ml_df = assembler.transform(gold_df).select("features", col("carbon_intensity_elec").alias("label"))
+
+ml_df = assembler.transform(gold_df).select("features", col("carbon_intensity_elec").alias("label")).cache()
 
 train_df, test_df = ml_df.randomSplit([0.8, 0.2], seed=42)
 
@@ -125,7 +137,7 @@ plt.close()
 if feature_importances is not None:
     plt.figure(figsize=(10, 5))
     sns.barplot(x=feature_importances, y=feature_cols, palette="viridis")
-    plt.title("Özellik Önem Dereceleri (Feature Importance)")
+    plt.title("Özellik Önem Dereceleri (Feature Importance - Random Forest)")
     plt.tight_layout()
     plt.savefig(f"{PLOT_DIR}/feature_importance.png")
     plt.close()
@@ -152,4 +164,4 @@ plt.tight_layout()
 plt.savefig(f"{PLOT_DIR}/residual_dagilimi.png")
 plt.close()
 
-print(f"\nTüm işlemler tamamlandı! Grafikler '{PLOT_DIR}' klasörüne kaydedildi.")
+print(f"\nTüm işlemler tamamlandı! Grafikler '{PLOT_DIR}' klasörüne başarıyla kaydedildi.")

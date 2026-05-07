@@ -29,8 +29,8 @@ for index, row in df.iterrows():
     message = {
         "timestamp": str(datetime.now()),
         "user_id": random.randint(1000, 9999), 
-        "event_type": random.choice(["click", "view", "purchase"]),
-        "related_id": random.randint(100, 999),
+        "event_type": random.choice(["consumption_update", "production_report", "emissions_log"]),
+        "related_id": random.randint(100, 999), 
         "data": row.to_dict()
     }
     

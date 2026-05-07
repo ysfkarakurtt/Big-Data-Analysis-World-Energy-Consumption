@@ -4,8 +4,10 @@ from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 spark = SparkSession.builder \
     .appName("WorldEnergyKafkaToDelta") \
+    .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+    .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0,io.delta:delta-core_2.12:2.2.0") \
     .config("spark.sql.shuffle.partitions", "2") \
-    .config("spark.hadoop.hadoop.security.authentication", "simple") \
     .config("spark.sql.ansi.enabled", "false") \
     .getOrCreate()
 
