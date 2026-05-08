@@ -164,4 +164,7 @@ plt.tight_layout()
 plt.savefig(f"{PLOT_DIR}/residual_dagilimi.png")
 plt.close()
 
+# pdf.to_csv("data/gold_dashboard.csv", index=False)
+# results_df.to_csv("data/model_results.csv", index=False)
+
 print(f"\nTüm işlemler tamamlandı! Grafikler '{PLOT_DIR}' klasörüne başarıyla kaydedildi.")
